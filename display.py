@@ -36,7 +36,7 @@ class Display:
             GPIO.setup(digit, GPIO.OUT)
 
         # Dictionary: welche Ziffer/Buchstabe -> welche Segmente sind an
-        self.__charset = {"":"", " ":"", ".":".", "0":"ABCDEF", "1":"BC", "2":"ABDEG", "3":"ABCDG", "4":"BCFG", "5":"ACDFG", 
+        self.__charset = {"":"", " ":"", ".":".", "-":"G", "0":"ABCDEF", "1":"BC", "2":"ABDEG", "3":"ABCDG", "4":"BCFG", "5":"ACDFG", 
         "6":"ACDEFG", "7":"ABC", "8":"ABCDEFG", "9":"ABCDFG", "A":"ABCEFG", "B":"CDEFG", "C":"ADEF", 
         "D":"BCDEG", "E":"ADEFG", "F":"AEFG", "G":"ACDEF", "H":"BCEFG", "I":"AE", "J":"ACD", "K":"ACEFG", 
         "L":"DEF", "M":"ACEG", "N":"ABCEF", "O":"CDEG", "P":"ABEFG", "Q":"ABCFG", "R":"EG", "S":"ACDF",
@@ -120,7 +120,7 @@ class Display:
     def sayScroll(self, sentence:str):
         length = len(sentence)
         self.say(sentence)
-        sleep(1)
+        sleep(2)
         i = 1
         while i < length:
             if sentence[i:][:1] == '.': i += 1
