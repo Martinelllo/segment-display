@@ -1,23 +1,22 @@
-TARGET = pi@192.168.178.22
+TARGET = pi@192.168.178.35
 PROJECT_DIR = ~/segment-display/
+
 SSH_DIRECTORY = ~/.ssh/id_rsa
 
-# enforce password authentication
-# sync:
-# 	rsync --verbose --archive -r -e 'ssh -o PreferredAuthentications=password' \
-# 	./ \
-# 	$(TARGET)$(DIRECTORY)
+help:
+	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
 
-# enforce ssh authentication example
-sync:
+
+sync: 			## Sync to the target, enforce ssh authentication example
 	rsync --verbose --archive -e \
 	'ssh -p 22' \
 	./ \
 	$(TARGET):$(PROJECT_DIR)
 
-# install ssh on the Target
-install-ssh:
+
+install-ssh: 		## install my ssh key on the target
 	ssh-copy-id -i $(SSH_DIRECTORY) $(TARGET)
 
-remote:
-	ssh pi@192.168.178.22
+
+remote: 		## get the console of the target
+	ssh $(TARGET)
