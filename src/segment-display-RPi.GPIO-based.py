@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
+# /etc/init.d/segment-clock.py
+### BEGIN INIT INFO
+# Provides:          segment-clock.py
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      
+# Short-Description: Start daemon at boot time
+# Description:       Enable service provided by daemon.
+### END INIT INFO
+
 # -*- encoding: utf-8 -*-
+
+# (C) 2018 by Oliver Kuhlemann
+# Bei Verwendung freue ich mich über Namensnennung,
+# Quellenangabe und Verlinkung
+# Quelle: http://cool-web.de/raspberry/
 
 import datetime
 from subprocess import PIPE, Popen
@@ -7,18 +23,7 @@ import requests
 from time import sleep       # damit müssen wir nur noch sleep() statt time.sleep schreiben
 from threading import Thread
 
-# sudo apt-get install screen 
-# installiert screen, damit kann man sitzung auch nach SSH-Logoff weiterlaufen lassen
-
-# (C) 2018 by Oliver Kuhlemann
-# Bei Verwendung freue ich mich über Namensnennung,
-# Quellenangabe und Verlinkung
-# Quelle: http://cool-web.de/raspberry/
-
-
 import RPi.GPIO as GPIO      # Funktionen für die GPIO-Ansteuerung laden
-
-from threading import Thread # ........
 
 class Display:
 
@@ -82,6 +87,8 @@ class Display:
                 GPIO.output(self.__pinData, GPIO.HIGH)
             self.__shiftTick()
         self.__storeTick()
+
+    
     
     def __loop(self):
         while self.__run:
@@ -134,8 +141,15 @@ class Display:
         self.clear()
         sleep(0.5)
 
-# get display pi 3 and 4
-display = Display(24, 25, 8, [21,20,16,12])
+    def showAnimation(self):
+        seq = [
+            [0,"A"],[1,"A"],[2,"A"],[3,"A"],[3,"B"],[3,"C"],
+            [3,"D"],[2,"D"],[1,"D"],[0,"D"],[0,"E"],[0,"F"]
+        ]
+        for s in seq:
+            self.draw(s[0],s[1])
+            sleep(.1)
+            self.clear()
 
 def getCpuTemp():
     process = Popen(['vcgencmd', 'measure_temp'], stdout=PIPE)
@@ -150,63 +164,69 @@ def checkNextcloudOnline():
         response = requests.get(url="https://martinhellmann.hopto.org/ocs/v2.php/apps/serverinfo/api/v1/info?format=json", timeout=20, headers=headers)
         return response.json()['ocs']['meta']['status']
     except Exception:
-        return 'no responce'
+        return 'offline'
 
-def animation():
-    seq = [
-        [0,"A"],[1,"A"],[2,"A"],[3,"A"],[3,"B"],[3,"C"],
-        [3,"D"],[2,"D"],[1,"D"],[0,"D"],[0,"E"],[0,"F"]
-    ]
-
-    for s in seq:
-        display.draw(s[0],s[1])
-        sleep(.1)
-        display.clear()
+# get display pi 3 and 4
+display = Display(24, 25, 8, [21,20,16,12])
 
 
 if __name__ == '__main__':
 
     from queue import Queue
 
-    que = Queue()
+    que = Queue() # neaded to grap the return value of a Thread
+
+    answere = None
+
+    print('programm start')
+
+    # check cloud
+    cloudThread = Thread(target=lambda q: q.put(checkNextcloudOnline()), args=(que,))
+    cloudThread.start()
 
     try:
 
         while True:
 
-            display.sayScroll('Hallo')
-            sleep(2)
-            display.clear()
+            # print('loop begins')
 
-            # Zeit anzeigen
-            ts = datetime.datetime.now()
-            for i in range (0,6):
-                display.say(ts.strftime("%H.%M"))
-                sleep(.5)
-                display.say(ts.strftime("%H%M"))
-                sleep(.5)
+            for i in range(3):
+                # Zeit anzeigen
+                ts = datetime.datetime.now()
+                for i in range (8):
+                    display.say(ts.strftime("%H.%M"))
+                    sleep(.5)
+                    display.say(ts.strftime("%H%M"))
+                    sleep(.5)
 
-            # zwischendrin auch mal das Datum
-            datum = ts.strftime("%d-%m-%Y")
-            display.sayScroll(datum)
+                # zwischendrin auch mal das Datum
+                datum = ts.strftime("%d-%m-%Y")
+                display.sayScroll(datum)
 
-            # CPU-Temperatur anzeigen
-            temp=str(getCpuTemp())
-            display.say(temp + "°C")
-            sleep(5)
+            # # CPU-Temperatur anzeigen
+            # temp=str(getCpuTemp())
+            # display.say(temp + "°C")
+            # sleep(5)
+
+            for i in range(3):
+                display.showAnimation()
 
             # check cloud
-            x = Thread(target=lambda q: q.put(checkNextcloudOnline()), args=(que,))
-            x.start()
-            while x.is_alive():
-                display.sayScroll('Loading')
-                for i in range(4):
-                    animation()
-            x.join()
-            answere = que.get()
-            display.sayScroll('cloud ' + answere)
+            if not cloudThread.is_alive():
+                cloudThread.join()
+                answere = que.get()
+                cloudThread = Thread(target=lambda q: q.put(checkNextcloudOnline()), args=(que,))
+                cloudThread.start()
+
+            if answere:
+                display.sayScroll('cloud ' + answere)
+                # print('cloud ' + answere)
             
 
     except KeyboardInterrupt:    # wenn in der Konsole CTRL+C gedrückt, Schleife beenden
         display.say ("C1A0")
+        exit()
+    
 
+print('programm stoppt')
+exit()

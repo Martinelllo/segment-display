@@ -1,0 +1,12 @@
+[Unit]
+Description=This service starts the pytons script on startup to drive the segment display
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/segment-display/segment-display-RPi.GPIO-based.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

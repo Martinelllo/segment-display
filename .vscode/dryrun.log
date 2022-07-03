@@ -1,8 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/home/benutzer/workplace/segment-display'
-rsync --verbose --archive -e \
-'ssh -p 22' \
-./ \
-pi@192.168.178.22:~/segment-display/
-make: Leaving directory '/home/benutzer/workplace/segment-display'
- 
