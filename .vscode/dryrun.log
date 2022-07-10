@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/benutzer/workplace/segment-display'
+fgrep -h "##"  Makefile | fgrep -v fgrep | sed -e 's/\\$//' | sed -e 's/##//'
+make: Leaving directory '/home/benutzer/workplace/segment-display'
+ 

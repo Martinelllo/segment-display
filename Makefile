@@ -21,6 +21,9 @@ sync: 			## Sync to the target, enforce ssh authentication example
 	$(LOCAL_SRC_DIR) \
 	$(TARGET):$(HOST_PROJECT_DIR)
 
+restart:  ## restart the service after changes have been uploaded
+	ssh -t $(TARGET) "sudo systemctl restart segment-display.service"
+
 install-service: ## Moves the service file to the directory on the debian and registers the service
 	ssh -t $(TARGET) "sudo cp ~/segment-display/segment-display.service /etc/systemd/system && \
 	sudo chmod 644 /etc/systemd/system/segment-display.service && \
